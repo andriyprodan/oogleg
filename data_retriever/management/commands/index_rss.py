@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from django.core.management import BaseCommand
 
 from articles.es_documents import ArticleDocument
+from articles.models import WebResource
 from search.embeddings_storage import write_embeddings
 
 
@@ -13,18 +14,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         feed = feedparser.parse(options['url'])
-        # add data into elasticsearch
-        pd_data = pd.DataFrame(columns=['url', 'title', 'abstract'])
+        resources = []
         for entry in feed.entries:
             # remove html tags using regex
 
-            abstract = ' '.join(abstract.split(' ')[:128])
-            ad = ArticleDocument(_id=entry['id'], title=entry['title'], content=entry['fulltext'],
-                                 abstract=abstract)
-            ad.save()
+            wr = WebResource.objects.update_or_create(url=entry['id'],
+                                                      defaults={'title': entry['title'], 'content': entry['fulltext']})
+            resources.append(wr)
 
-            # machine learning part
-            new_row = pd.DataFrame({'url': entry['id'], 'title': entry['title'], 'abstract': abstract}, index=[0])
-            pd_data = pd.concat([pd_data, new_row], ignore_index=True)
+        # machine learning part
         # write dense vectors to file
-        write_embeddings(pd_data)
+        write_embeddings(resources)

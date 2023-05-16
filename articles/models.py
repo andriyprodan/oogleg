@@ -30,9 +30,19 @@ class WebResource(models.Model):
         soup = BeautifulSoup(self.content, 'html.parser')
         text_string = soup.get_text(separator=' ')
         self.abstract = self.process_abstract(self.title + ' ' + text_string)
+        self.abstract = " ".join(self.abstract.split(' ')[:128])
         super().save(*args, **kwargs)
 
         #         save web resource as node in neo4j
         with driver.session() as session:
-            session.run(
-                f"MERGE (n:WebResource {{url: '{self.url}'}}) SET n.title = '{self.title}', n.abstract = '{self.abstract}', n.content = '{self.content}';")
+            parameters = {
+                'url': self.url,
+                'title': self.title,
+                'abstract': self.abstract,
+                'content': self.content
+            }
+            query = """
+                MERGE (n:WebResource {url: $url})
+                SET n.title = $title, n.abstract = $abstract, n.content = $content
+            """
+            session.run(query, parameters=parameters)

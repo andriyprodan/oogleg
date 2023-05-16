@@ -6,7 +6,15 @@ from search.embeddings_storage import get_embeddings, images_embeddings_cache_pa
 from search.utils import convert_to_dataframe
 
 
-def create_faiss_index(index_name, embeddings_data, pandas_data):
+# not used
+# def save_index_to_file(index_name, embeddings_data, pandas_data):
+#     encoded_data = bi_encoder.encode(pandas_data['abstract'].values.tolist())
+#     encoded_data = np.asarray(encoded_data.astype('float32'))
+#     index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
+#     index.add_with_ids(encoded_data, np.array(range(0, len(pandas_data))))
+#     faiss.write_index(index, f'{index_name}.index')
+
+def create_faiss_index(index_name, embeddings_data):
     ### Create the FAISS index
     quantizer = faiss.IndexFlatIP(embedding_size)
     index = faiss.IndexIVFFlat(quantizer, embedding_size, n_clusters, faiss.METRIC_INNER_PRODUCT)
@@ -22,30 +30,24 @@ def create_faiss_index(index_name, embeddings_data, pandas_data):
 
     # Finally we add all embeddings to the index
     index.add(corpus_embeddings)
-    # save_index_to_file(index_name, embeddings_data, pandas_data)
+    # save the index
+    faiss.write_index(index, f'{index_name}.index')
 
     print("Corpus loaded with {} sentences / embeddings".format(len(embeddings_data['abstracts'])))
     return index
 
 
-def save_index_to_file(index_name, embeddings_data, pandas_data):
-    encoded_data = bi_encoder.encode(pandas_data['abstract'].values.tolist())
-    encoded_data = np.asarray(encoded_data.astype('float32'))
-    index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
-    index.add_with_ids(encoded_data, np.array(range(0, len(pandas_data))))
-    faiss.write_index(index, f'{index_name}.index')
-
-
 def get_faiss_index(index_name, embeddings_cache_path):
     data = get_embeddings(embeddings_cache_path)
-    pandas_data = convert_to_dataframe(data)
+    if not data:
+        return (None, None)
     try:
-        return (faiss.read_index(f'{index_name}.index'), data, pandas_data)
+        return (faiss.read_index(f'{index_name}.index'), data)
     except:
-        return (create_faiss_index(index_name, data, pandas_data), data, pandas_data)
+        return (create_faiss_index(index_name, data), data)
 
 
 # todo update faiss index every hour, use Celery cron job
-# text_index, text_data, pandas_text_data = get_faiss_index('text_index', embedding_cache_path)
+text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
 # images_index, images_data = get_faiss_index('images_index', images_embeddings_cache_path)
-text_index, text_data, pandas_text_data = None, None, None
+# text_index, text_data, pandas_text_data = None, None, None

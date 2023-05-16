@@ -5,6 +5,7 @@ import faiss
 import numpy as np
 import pandas as pd
 from django.conf import settings
+from django.db.models import QuerySet
 
 from search.constants import model_name, max_corpus_size, embedding_size, n_clusters, bi_encoder
 
@@ -13,27 +14,16 @@ images_embeddings_cache_path = settings.BASE_DIR / 'images-abstract-embeddings-{
                                                                                                       max_corpus_size)
 
 
-def write_embeddings(article_pd_data: pd.DataFrame):
-    # drop any rows that have missing values in either the 'url', 'title' or 'abstract' columns
-    data = article_pd_data.dropna(subset=['url', 'title', 'abstract']).reset_index(drop=True)
-    data.drop_duplicates(subset=['url', 'title', 'abstract'], inplace=True)
-    pickle_data = {
-        'urls': [],
-        'titles': [],
-        'abstracts': [],
-    }
-    for index, row in data.iterrows():
-        # unite titles and abstracts
-        pickle_data['urls'].append(row['url'])
-        pickle_data['titles'].append(row['title'])
-        pickle_data['abstracts'].append(row['abstract'])
-
+def write_embeddings(web_resources):
+    pickle_data = {}
     # todo - store the embeddings in a database instead of a file
-    # todo - don't overwrite the file if it already exists, instead append to it
+    # OR todo - don't overwrite the file if it already exists, instead append to it
     print("Encode the corpus. This might take a while")
-    corpus_embeddings = bi_encoder.encode(pickle_data['abstracts'], show_progress_bar=True,
+    abstracts = [wr.abstract for wr in web_resources]
+    corpus_embeddings = bi_encoder.encode(abstracts, show_progress_bar=True,
                                           convert_to_numpy=True)
     print("Store file on disc")
+    pickle_data['db_ids'] = [wr.id for wr in web_resources]
     pickle_data['embeddings'] = corpus_embeddings
     with open(embedding_cache_path, "wb") as fOut:
         pickle.dump(pickle_data, fOut)
@@ -47,9 +37,7 @@ def get_embeddings(cache_path):
     with open(cache_path, "rb") as fIn:
         cache_data = pickle.load(fIn)
         data = {
-            'urls': cache_data['urls'],
-            'titles': cache_data['titles'],
-            'abstracts': cache_data['abstracts'],
+            'db_ids': cache_data['db_ids'],
             'embeddings': cache_data['embeddings'],
         }
     return data

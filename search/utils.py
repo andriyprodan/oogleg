@@ -1,6 +1,6 @@
 import pandas as pd
 
-
+# not used
 def convert_to_dataframe(data):
     return pd.DataFrame([{
         'abstract': data['abstracts'][i],
