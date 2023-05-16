@@ -1,0 +1,32 @@
+{% extends 'neo4j_admin/base.html' %}
+
+
+{% block content %}
+    <div class="results_wrapper" style="margin: 10px auto">
+        <table class="table" style="margin: 10px; max-width: 100%">
+            <thead class="thead-dark">
+            <tr>
+                {#                <th scope="col">ID</th>#}
+                <th scope="col" style="text-align: center;">Редагувати</th>
+                {% for col in fields %}
+                    <th scope="col">{{ col }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in results %}
+                <tr>
+                    {#                    <th scope="row">{{ row.n.values.id }}</th>#}
+                    <th scope="row" style="text-align: center;">
+                        <a href="{% url 'neo4j_admin:edit' model_name=model_name id=row.id %}"><i
+                                class="fa fa-edit" style="cursor: pointer;"></i></a>
+                    </th>
+                    {% for prop in row.n.values %}
+                        <td>{{ prop }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
