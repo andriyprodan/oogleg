@@ -1,3 +1,4 @@
+import gc
 import os
 from html import unescape
 from pathlib import Path
@@ -18,14 +19,14 @@ from search.constants import trained_model_name, get_encoder
 
 def write_to_files(passages):
     tokenizer = MT5Tokenizer.from_pretrained('google/mt5-large', add_prefix_space=False)
-    models = [#MT5ForConditionalGeneration.from_pretrained('SGaleshchuk/mT5-sum-news-ua'),
+    models = [MT5ForConditionalGeneration.from_pretrained('SGaleshchuk/mT5-sum-news-ua'),
               MT5ForConditionalGeneration.from_pretrained('csebuetnlp/mT5_multilingual_XLSum'),
               MT5ForConditionalGeneration.from_pretrained('spursyy/mT5_multilingual_XLSum_rust')]
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     for model in models:
         model.eval()
         model.to(device)
-        pipl = pipeline("summarization", model=model, tokenizer=tokenizer, framework="pt", device=0)
+        # pipl = pipeline("summarization", model=model, tokenizer=tokenizer, framework="pt", device=0)
         pairs = []
         file_count = 0
         # loop through each passage individually
@@ -42,7 +43,7 @@ def write_to_files(passages):
                 min_length=3,
                 do_sample=True,
                 top_p=0.95,
-                num_return_sequences=3
+                num_return_sequences=2
             )
             # summary = pipl(p, max_length=16, min_length=3, do_sample=True)[0]
             # outputs.append(summary['summary_text'])
@@ -66,7 +67,9 @@ def write_to_files(passages):
                 fp.write('\n'.join(pairs))
 
 #         clear CUDA memory for next model
+        del model
         torch.cuda.empty_cache()
+        gc.collect()
 
 
 
@@ -78,8 +81,8 @@ class Command(BaseCommand):
         if not os.path.exists('data'):
             os.makedirs('data')
 
-        documents = WebResource.objects.annotate(text_len=Length('abstract')).filter(text_len__gt=300).iterator()
-        # documents = WebResource.objects.filter(url__startswith='https://uk.wikipedia.org/wiki').iterator()
+        # documents = WebResource.objects.annotate(text_len=Length('abstract')).filter(text_len__gt=300).iterator()
+        documents = WebResource.objects.filter(url__startswith='https://tsn.ua/').iterator()
 
         passages = set()
         for doc in documents:

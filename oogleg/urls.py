@@ -23,3 +23,7 @@ urlpatterns = [
     path('neo4j/', include('neo4j_admin.urls'), name='neo4j_admin'),
     path('rdf/', include('rdf_ontologies.urls'), name='rdf_ontologies'),
 ]
+
+admin.site.site_header = 'Oogleg'
+admin.site.site_title  = 'Oogleg'
+admin.site.index_title   = 'Oogleg'

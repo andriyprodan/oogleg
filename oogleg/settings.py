@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'articles',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +43,6 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',
     'neo4j_admin',
 
-    'articles',
     'data_retriever',
     'search',
     'rdf_ontologies',

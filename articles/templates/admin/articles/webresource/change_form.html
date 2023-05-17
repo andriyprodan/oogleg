@@ -1,0 +1,93 @@
+{% extends 'admin/change_form.html' %}
+
+{% block field_sets %}
+    {{ block.super }}
+    <div class="js-inline-admin-formset inline-group" id="cells-group">
+        <div class="tabular inline-related last-related">
+            <fieldset class="module">
+                <h2>Відносини в RDF графі</h2>
+                <table>
+                    <thead>
+                    <tr>
+                        <th class="column-subject required">Суб'єкт</th>
+                        <th class="column-teacher required">Предикат</th>
+                        <th class="column-teacher required">Об'єкт</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for po in predicate_objects %}
+                        <tr data-rowId="{{ forloop.counter }}" class="form-row has_original dynamic-cells po-cells">
+                            <input type="hidden" name="predicate_objects_predicate_original_value-{{ forloop.counter }}"
+                                   value="{{ po.0 }}">
+                            <input type="hidden" name="predicate_objects_object_original_value-{{ forloop.counter }}"
+                                   value="{{ po.1 }}">
+                            <td>{{ adminform.form.instance.url|slice:50 }}
+                                {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
+                            <td style="min-width: 200px;"><input
+                                    name="predicate_objects_predicate_value-{{ forloop.counter }}"
+                                    style="min-width: 315px;" type="text"
+                                    value="{{ po.0 }}"></td>
+                            <td><input name="predicate_objects_object_value-{{ forloop.counter }}" type="text"
+                                       value="{{ po.1 }}"></td>
+                        </tr>
+                    {% endfor %}
+                    {% for sp in subject_predicates %}
+                        <tr data-rowId="{{ forloop.counter }}" class="form-row has_original dynamic-cells sp-cells">
+                            <input type="hidden" name="subject_predicates_subject_original_value-{{ forloop.counter }}"
+                                   value="{{ po.0 }}">
+                            <input type="hidden"
+                                   name="subject_predicates_predicate_original_value-{{ forloop.counter }}"
+                                   value="{{ po.1 }}">
+                            <td><input name="subject_predicates_subject_value-{{ forloop.counter }}" type="text"
+                                       value="{{ sp.0 }}"></td>
+                            <td style="min-width: 200px;"><input
+                                    name="subject_predicates_predicate_value-{{ forloop.counter }}"
+                                    style="min-width: 315px;" type="text"
+                                    value="{{ sp.1 }}"></td>
+                            <td>{{ adminform.form.instance.url|slice:50 }}
+                                {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="7" style="display: flex; justify-content: space-between"><a class="add-sp"
+                                                                                                 href="#">Додати
+                            суб'єкт/предикат</a></td>
+                        <td></td>
+                        <td style="text-align: right;"><a class="add-po" href="#">Додати предикат/об'єкт</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+        </div>
+    </div>
+
+    <script>
+        function myCloneNode(lastRow) {
+            const newNode = lastRow.cloneNode(true);
+            const inputs = newNode.querySelectorAll('input');
+            const rowId = parseInt(lastRow.dataset.rowid) + 1;
+            inputs.forEach((input) => {
+                input.value = '';
+                input.name = input.name.replace(/-\d+/, `-${rowId}`);
+            })
+            newNode.dataset.rowid = rowId;
+            return newNode;
+        }
+
+        document.querySelector('a.add-sp').addEventListener('click', (e) => {
+            e.preventDefault();
+            const spSpells = document.querySelectorAll('.sp-cells');
+            const lastRow = spSpells[spSpells.length - 1];
+            const newRow = myCloneNode(lastRow);
+            lastRow.parentNode.insertBefore(newRow, lastRow.nextSibling);
+        })
+        document.querySelector('a.add-po').addEventListener('click', (e) => {
+            e.preventDefault();
+            const poCells = document.querySelectorAll('.po-cells');
+            const lastRow = poCells[poCells.length - 1];
+            const newRow = myCloneNode(lastRow);
+            lastRow.parentNode.insertBefore(newRow, lastRow.nextSibling);
+        })
+    </script>
+{% endblock %}
+
