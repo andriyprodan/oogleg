@@ -8,12 +8,13 @@ from search.utils import convert_to_dataframe
 
 
 # not used
-# def save_index_to_file(index_name, embeddings_data, pandas_data):
-#     encoded_data = bi_encoder.encode(pandas_data['abstract'].values.tolist())
-#     encoded_data = np.asarray(encoded_data.astype('float32'))
-#     index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
-#     index.add_with_ids(encoded_data, np.array(range(0, len(pandas_data))))
-#     faiss.write_index(index, f'{index_name}.index')
+def save_index_to_file(index_name, embeddings_data, pandas_data):
+    encoded_data = bi_encoder.encode(pandas_data['abstract'].values.tolist())
+    encoded_data = np.asarray(encoded_data.astype('float32'))
+    index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
+    index.add_with_ids(encoded_data, np.array(range(0, len(pandas_data))))
+    faiss.write_index(index, f'{index_name}.index')
+
 
 def create_faiss_index(index_name, embeddings_data):
     ### Create the FAISS index
@@ -49,7 +50,7 @@ def get_faiss_index(index_name, embeddings_cache_path):
 
 
 # todo update faiss index every hour, use Celery cron job
-# text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
+text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
 
 # images_index, images_data = get_faiss_index('images_index', images_embeddings_cache_path)
-text_index, ids_data = None, None
+# text_index, ids_data = None, None

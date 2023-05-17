@@ -14,7 +14,7 @@ images_embeddings_cache_path = settings.BASE_DIR / 'images-abstract-embeddings-{
                                                                                                       max_corpus_size)
 
 
-def write_embeddings(web_resources):
+def write_embeddings(web_resources, mode='wb'):
     pickle_data = {}
     # todo - store the embeddings in a database instead of a file
     # OR todo - don't overwrite the file if it already exists, instead append to it
@@ -25,7 +25,7 @@ def write_embeddings(web_resources):
     print("Store file on disc")
     pickle_data['db_ids'] = [wr.id for wr in web_resources]
     pickle_data['embeddings'] = corpus_embeddings
-    with open(embedding_cache_path, "wb") as fOut:
+    with open(embedding_cache_path, mode) as fOut:
         pickle.dump(pickle_data, fOut)
 
 

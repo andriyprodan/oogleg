@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 from django.db import models
 
 from neo4j_admin.driver import driver
+from search.constants import bi_encoder
+from search.embeddings_storage import write_embeddings
+from search.faiss_index import text_index
 
 
 class WebResource(models.Model):
@@ -37,16 +40,10 @@ class WebResource(models.Model):
 
         super().save(*args, **kwargs)
 
-        #         save web resource as node in neo4j
-        with driver.session() as session:
-            parameters = {
-                'url': self.url,
-                'title': self.title,
-                'abstract': self.abstract,
-                'content': self.content
-            }
-            query = """
-                MERGE (n:WebResource {url: $url})
-                SET n.title = $title, n.abstract = $abstract, n.content = $content
-            """
-            session.run(query, parameters=parameters)
+        # create dense vector, add it to embeddings file and to faiss index
+        # write_embeddings([self], 'wb+')
+        # vector = bi_encoder.encode([self.abstract])[0]
+        # text_index.add_with_ids(vector, [self.id])
+
+
+

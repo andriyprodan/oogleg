@@ -1,3 +1,5 @@
+{% load custom_tags %}
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,15 +8,196 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center
+        }
+
+        .search {
+            background-color: #fff;
+            padding: 4px;
+            border-radius: 5px
+        }
+
+        .search-1 {
+            position: relative;
+            width: 100%
+        }
+
+        .search-1 input {
+            height: 45px;
+            border: none;
+            width: 100%;
+            padding-left: 34px;
+            padding-right: 10px;
+            border-right: 2px solid #eee
+        }
+
+        .search-1 input:focus {
+            border-color: none;
+            box-shadow: none;
+            outline: none
+        }
+
+        .search-1 i {
+            position: absolute;
+            top: 12px;
+            left: 5px;
+            font-size: 24px;
+            color: #eee
+        }
+
+        ::placeholder {
+            color: #eee;
+            opacity: 1
+        }
+
+        .search-2 {
+            position: relative;
+            width: 100%
+        }
+
+        .search-2 input {
+            height: 45px;
+            border: none;
+            width: 100%;
+            padding-left: 18px;
+            padding-right: 100px
+        }
+
+        .search-2 input:focus {
+            border-color: none;
+            box-shadow: none;
+            outline: none
+        }
+
+        .search-2 i {
+            position: absolute;
+            top: 12px;
+            left: -10px;
+            font-size: 24px;
+            color: #eee
+        }
+
+        .search-2 button {
+            position: absolute;
+            right: 1px;
+            top: 0px;
+            border: none;
+            height: 45px;
+            background-color: red;
+            color: #fff;
+            width: 90px;
+            border-radius: 4px
+        }
+
+        @media (max-width: 800px) {
+            .search-1 input {
+                border-right: none;
+                border-bottom: 1px solid #eee
+            }
+
+            .search-2 i {
+                left: 4px
+            }
+
+            .search-2 input {
+                padding-left: 34px
+            }
+
+            .search-2 button {
+                height: 37px;
+                top: 5px
+            }
+        }
+    </style>
 </head>
 <body>
-    <ul>
-        {% for res in results %}
-            <li>
-                <div><a href="{{ res.url }}">{{ res.title }}</a></div>
-                <div>{{ res.abstract }}</div>
-            </li>
-        {% endfor %}
-    </ul>
+<header style="position: fixed; min-height: 70px; padding: 5px 0 10px; top: 0; width: 100%; background: lightseagreen; background-image: linear-gradient(to right top, #D91B23, #124FEB);">
+    <form action="" style="margin-top: 20px;">
+        <div class="container">
+            <div class="search">
+                <div class="row">
+                    <div>
+                        <div>
+                            <div class="search-2"><i class='bx bxs-map'></i> <input
+                                    {% if query %}value="{{ query }}"{% endif %} name="query" type="text"
+                                    placeholder="Введи в мене свій запит">
+                                <button>Пошук</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</header>
+<main style="margin-top: calc(14px + 88px); padding: 20px 20px 0; width: 1320px; max-width: 90%">
+    <div>
+        <ul style="list-style: none;">
+            {% for res in results %}
+                <li>
+                    <div><a href="{{ res.url }}">{{ res.title }}</a></div>
+                    <small><a style="color: lightgrey; "
+                              href="{{ res.url|get_domain_from_url }}">{{ res.url|get_domain_from_url }}</a></small>
+                    <div>{{ res.content|striptags|slice:"333" }}{% if res.content|striptags|length > 222 %}
+                        ...{% endif %}</div>
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    </div>
+    {% if query %}
+        <nav aria-label="Page navigation example" style="padding-left: 2rem;">
+            <ul class="pagination">
+                {% if page > 1 %}
+                    <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page|add:-1 }}">Попередня</a></li>
+                {% endif %}
+                {% for p in num_pages_range %}
+                    <li class="page-item"><a class="page-link {% if page == p %}active{% endif %}" href="?query={{ query }}&page={{ p }}">{{ p }}</a></li>
+                {% endfor %}
+                {% if page != num_pages %}
+                    <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page|add:1 }}">Наступна</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</main>
 </body>
+<script>
+    const searchFocus = document.getElementById('search-focus');
+    const keys = [
+        {keyCode: 'AltLeft', isTriggered: false},
+        {keyCode: 'ControlLeft', isTriggered: false},
+    ];
+
+    window.addEventListener('keydown', (e) => {
+        keys.forEach((obj) => {
+            if (obj.keyCode === e.code) {
+                obj.isTriggered = true;
+            }
+        });
+
+        const shortcutTriggered = keys.filter((obj) => obj.isTriggered).length === keys.length;
+
+        if (shortcutTriggered) {
+            searchFocus.focus();
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        keys.forEach((obj) => {
+            if (obj.keyCode === e.code) {
+                obj.isTriggered = false;
+            }
+        });
+    });
+</script>
 </html>

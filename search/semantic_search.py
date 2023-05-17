@@ -18,6 +18,7 @@ def search_faiss(query, top_k, index, model):
     t = time.time()
     query_vector = model.encode([query])
     top_k = index.search(query_vector, top_k)
+
     print('>>>> Results in Total Time: {}'.format(time.time() - t))
     top_k_ids = top_k[1].tolist()[0]
     top_k_ids = list(np.unique(top_k_ids))
