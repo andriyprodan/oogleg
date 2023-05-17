@@ -1,8 +1,11 @@
 import os
+from html import unescape
 from pathlib import Path
 
 import torch
+import unicodedata
 from django.core.management import BaseCommand
+from django.db.models.functions import Length
 from sentence_transformers import InputExample, datasets, models, losses
 from tqdm import tqdm
 from tqdm.auto import tqdm
@@ -10,55 +13,61 @@ from transformers import MT5ForConditionalGeneration, MT5Tokenizer, T5Tokenizer,
     AutoModelForSeq2SeqLM
 
 from articles.es_documents import ArticleDocument
+from articles.models import WebResource
 from search.constants import trained_model_name, get_encoder
 
 def write_to_files(passages):
     tokenizer = MT5Tokenizer.from_pretrained('google/mt5-large', add_prefix_space=False)
-    models = [MT5ForConditionalGeneration.from_pretrained('SGaleshchuk/mT5-sum-news-ua'),
+    models = [#MT5ForConditionalGeneration.from_pretrained('SGaleshchuk/mT5-sum-news-ua'),
               MT5ForConditionalGeneration.from_pretrained('csebuetnlp/mT5_multilingual_XLSum'),
               MT5ForConditionalGeneration.from_pretrained('spursyy/mT5_multilingual_XLSum_rust')]
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     for model in models:
         model.eval()
-        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # model.to(device)
-    summarizers = [pipeline("summarization", model=model, tokenizer=tokenizer, framework="pt") for model in models]
-    pairs = []
-    file_count = 0
-    # loop through each passage individually
-    for p in tqdm(passages):
-        p = p.replace('\t', ' ')
-        # create input tokens
-        # input_ids = tokenizer.encode(p, return_tensors='pt')
-        # input_ids = input_ids.to(device)
-        # generate output tokens (query generation)
-        outputs = []
-        for summ in summarizers:
-            # outputss = model.generate(
-            #     input_ids=input_ids,
-            #     max_length=64,
-            #     do_sample=True,
-            #     top_p=0.95,
-            #     num_return_sequences=2
-            # )
-            summary = summ(p, max_length=16, min_length=3, do_sample=True)[0]
-            outputs.append(summary['summary_text'])
-        # outputs.append(paraphrase_base(p))
-        # decode output tokens to human-readable language
-        for output in outputs:
-            # append (query, passage) pair to pairs list, separate by \t
-            pairs.append(output.replace('\t', ' ') + '\t' + p)
+        model.to(device)
+        pipl = pipeline("summarization", model=model, tokenizer=tokenizer, framework="pt", device=0)
+        pairs = []
+        file_count = 0
+        # loop through each passage individually
+        for p in tqdm(passages):
+            p = p.replace('\t', ' ')
+            # create input tokens
+            input_ids = tokenizer.encode(p, return_tensors='pt')
+            input_ids = input_ids.to(device)
+            # generate output tokens (query generation)
+            outputs = []
+            outputss = model.generate(
+                input_ids=input_ids,
+                max_length=16,
+                min_length=3,
+                do_sample=True,
+                top_p=0.95,
+                num_return_sequences=3
+            )
+            # summary = pipl(p, max_length=16, min_length=3, do_sample=True)[0]
+            # outputs.append(summary['summary_text'])
+            # outputs.append(paraphrase_base(p))
+            # decode output tokens to human-readable language
+            for output in outputss:
+                output = tokenizer.decode(output, skip_special_tokens=True)
+                # append (query, passage) pair to pairs list, separate by \t
+                pairs.append(output.replace('\t', ' ') + '\t' + p)
 
-        # once we have 256 pairs write to file
-        if len(pairs) > 256:
-            with open(f'data/pairs_{file_count}.tsv', 'w+', encoding='utf-8') as fp:
+            # once we have 256 pairs write to file
+            if len(pairs) > 256:
+                with open(f'data/pairs_{file_count}.tsv', 'w+', encoding='utf-8') as fp:
+                    fp.write('\n'.join(pairs))
+                file_count += 1
+                pairs = []
+
+        if pairs is not None:
+            # save the final, smaller than 1024 batch
+            with open(f'data/pairs_{file_count}.tsv', 'w', encoding='utf-8') as fp:
                 fp.write('\n'.join(pairs))
-            file_count += 1
-            pairs = []
 
-    if pairs is not None:
-        # save the final, smaller than 1024 batch
-        with open(f'data/pairs_{file_count}.tsv', 'w', encoding='utf-8') as fp:
-            fp.write('\n'.join(pairs))
+#         clear CUDA memory for next model
+        torch.cuda.empty_cache()
+
 
 
 class Command(BaseCommand):
@@ -69,12 +78,13 @@ class Command(BaseCommand):
         if not os.path.exists('data'):
             os.makedirs('data')
 
-        documents = ArticleDocument().search().query('match_all').scan()
+        documents = WebResource.objects.annotate(text_len=Length('abstract')).filter(text_len__gt=300).iterator()
+        # documents = WebResource.objects.filter(url__startswith='https://uk.wikipedia.org/wiki').iterator()
 
         passages = set()
         for doc in documents:
             try:
-                passages.add(doc.abstract)
+                passages.add(unicodedata.normalize('NFKC', unescape(doc.abstract)))
             except:
                 continue
         passages = list(passages)

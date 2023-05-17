@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('search.urls'), name='search'),
     path('neo4j/', include('neo4j_admin.urls'), name='neo4j_admin'),
+    path('rdf/', include('rdf_ontologies.urls'), name='rdf_ontologies'),
 ]

@@ -164,3 +164,5 @@ abstract-embeddings-paraphrase-multilingual-mpnet-base-v2-size-100000.pkl
 data/
 
 trained_paraphrase-multilingual-mpnet-base-v2/
+ukwiki-20211220-abstract.xml
+text_index.index

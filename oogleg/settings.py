@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'articles',
     'data_retriever',
     'search',
+    'rdf_ontologies',
 ]
 
 MIDDLEWARE = [

@@ -1,5 +1,6 @@
 import faiss
 import numpy as np
+import torch
 
 from search.constants import embedding_size, n_clusters, bi_encoder
 from search.embeddings_storage import get_embeddings, images_embeddings_cache_path, embedding_cache_path
@@ -33,7 +34,7 @@ def create_faiss_index(index_name, embeddings_data):
     # save the index
     faiss.write_index(index, f'{index_name}.index')
 
-    print("Corpus loaded with {} sentences / embeddings".format(len(embeddings_data['abstracts'])))
+    print("Corpus loaded with {} sentences / embeddings".format(len(embeddings_data['db_ids'])))
     return index
 
 
@@ -49,5 +50,6 @@ def get_faiss_index(index_name, embeddings_cache_path):
 
 # todo update faiss index every hour, use Celery cron job
 text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
+
 # images_index, images_data = get_faiss_index('images_index', images_embeddings_cache_path)
-# text_index, text_data, pandas_text_data = None, None, None
+# text_index, ids_data = None, None
