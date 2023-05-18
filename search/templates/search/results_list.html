@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
           integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <style>
         body {
             display: flex;
@@ -143,12 +145,24 @@
     <div>
         <ul style="list-style: none;">
             {% for res in results %}
-                <li>
-                    <div><a href="{{ res.url }}">{{ res.title }}</a></div>
+                <li id="result-{{ res.id }}">
+                    <div><a href="{{ res.url }}">{{ res.title }}</a><i data-post_id="{{ res.id }}"
+                                                                       class="fa fa-chevron-down expand_ontology"
+                                                                       style="margin-left: .5em; cursor: pointer; color: cornflowerblue;"></i>
+                    </div>
                     <small><a style="color: lightgrey; "
                               href="{{ res.url|get_domain_from_url }}">{{ res.url|get_domain_from_url }}</a></small>
-                    <div>{{ res.content|striptags|slice:"333" }}{% if res.content|striptags|length > 222 %}
+                    <div>{{ res.content|striptags|slice:"333" }}{% if res.content|striptags|length > 333 %}
                         ...{% endif %}</div>
+                    <div class="graph" style="display: none; margin-bottom: 1em;" id="graph_{{ res.id }}">
+                        <hr>
+                        <div class="graph-inner" style="display: flex;">
+                            <div class="subjects" style="border-right: 1px solid royalblue; display: none; align-items: flex-end;padding-right: 1em; flex-direction: column;"></div>
+                            <div class="entity" style="margin: 0 1em; display: flex; justify-content: center; align-items: center;"><a href="{{ res.url }}">{{ res.title }}</a></div>
+                            <div class="objects" style="border-left: 1px solid royalblue; display: none; padding-left: 1em; flex-direction: column;"></div>
+                        </div>
+                        <hr>
+                    </div>
                 </li>
                 <hr>
             {% endfor %}
@@ -158,13 +172,16 @@
         <nav aria-label="Page navigation example" style="padding-left: 2rem;">
             <ul class="pagination">
                 {% if page > 1 %}
-                    <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page|add:-1 }}">Попередня</a></li>
+                    <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page|add:-1 }}">Попередня</a>
+                    </li>
                 {% endif %}
                 {% for p in num_pages_range %}
-                    <li class="page-item"><a class="page-link {% if page == p %}active{% endif %}" href="?query={{ query }}&page={{ p }}">{{ p }}</a></li>
+                    <li class="page-item"><a class="page-link {% if page == p %}active{% endif %}"
+                                             href="?query={{ query }}&page={{ p }}">{{ p }}</a></li>
                 {% endfor %}
                 {% if page != num_pages %}
-                    <li class="page-item"><a class="page-link" href="?query={{ query }}&page={{ page|add:1 }}">Наступна</a></li>
+                    <li class="page-item"><a class="page-link"
+                                             href="?query={{ query }}&page={{ page|add:1 }}">Наступна</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -197,6 +214,69 @@
             if (obj.keyCode === e.code) {
                 obj.isTriggered = false;
             }
+        });
+    });
+</script>
+<script>
+    document.querySelectorAll('.expand_ontology').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            const graph = document.getElementById(`graph_${el.dataset.post_id}`);
+            if (graph.classList.contains('expanded')) {
+                el.classList.remove('fa-chevron-up');
+                el.classList.add('fa-chevron-down');
+                {#graph.style.display = 'none';#}
+                return;
+            }
+            e.preventDefault();
+            el.classList.remove('fa-chevron-down');
+            el.classList.add('fa-chevron-up');
+            fetch(`rdf/api/${el.dataset.post_id}/get_graph_connections/`, {}).then((response) => response.json()).then((data) => {
+                if (!data.subjects && !data.objects) {
+                    alert('Немає зв\'язків')
+                    return;
+                }
+                graph.style.display = 'block';
+                graph.classList.add('expanded');
+                if (data.subjects) {
+                    graph.querySelector('.subjects').style.display = 'flex';
+                    for (let subject of data.subjects) {
+                        const subjectEl = document.createElement('div');
+                        if (subject.subject.url) {
+                            subjectEl.innerHTML = `<a href="${subject.subject.url}">${subject.subject.title}</a>`;
+                        } else {
+                            subjectEl.innerHTML = `${subject.subject.title}`;
+                        }
+                        // add predicate
+                        const predicateEl = document.createElement('span');
+                        predicateEl.innerHTML = ` ${subject.predicate} `;
+                        subjectEl.appendChild(predicateEl);
+                        graph.querySelector('.subjects').appendChild(subjectEl);
+                    }
+
+                }
+                if (data.objects) {
+                    graph.querySelector('.objects').style.display = 'flex';
+                    for (let object of data.objects) {
+                        const objectEl = document.createElement('div');
+                        if (object.object.url) {
+                            objectEl.innerHTML = `<a href="${object.object.url}">${object.object.title}</a>`;
+                        } else {
+                            objectEl.innerHTML = `${object.object.title}`;
+                        }
+                        // add predicate
+                        const predicateEl = document.createElement('span');
+                        predicateEl.innerHTML = ` ${object.predicate} `;
+                        // prepend predicate
+                        objectEl.prepend(predicateEl);
+                        graph.querySelector('.objects').appendChild(objectEl);
+                    }
+                }
+            }).catch((error) => {
+                console.log(error);
+            }).finally(() => {
+                el.classList.remove('fa-chevron-up');
+                el.classList.add('fa-chevron-down');
+            });
         });
     });
 </script>

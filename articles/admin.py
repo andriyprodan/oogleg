@@ -1,5 +1,5 @@
 from django.contrib import admin
-from rdflib import URIRef
+from rdflib import URIRef, Literal
 
 from articles.models import WebResource
 from oogleg import settings
@@ -23,16 +23,29 @@ class WebResourceAdmin(admin.ModelAdmin):
                     predicate = value
                     number = key.rsplit('-', 1)[1]
                     object = request.POST[f'predicate_objects_object_value-{number}']
-                    my_graph.add((URIRef(url), URIRef(predicate), URIRef(object)))
+                    # if object is not URL
+                    if not object.startswith('http'):
+                        object = Literal(object)
+                    else:
+                        object = URIRef(object)
+                    if predicate and object:
+                        my_graph.add((URIRef(url), URIRef(predicate), object))
                 elif key.startswith('subject_predicates_subject_value-'):
                     subject = value
                     number = key.rsplit('-', 1)[1]
                     predicate = request.POST[f'subject_predicates_predicate_value-{number}']
-                    my_graph.add((URIRef(subject), URIRef(predicate), URIRef(url)))
+                    if not subject.startswith('http'):
+                        subject = Literal(subject)
+                    else:
+                        subject = URIRef(subject)
+                    if subject and predicate:
+                        my_graph.add((URIRef(subject), URIRef(predicate), URIRef(url)))
             my_graph.serialize(destination=str(settings.BASE_DIR / "ontology.ttl"), format="turtle")
 
         if object_id:
             url = WebResource.objects.get(pk=object_id).url
+
+            extra_context['all_predicates'] = my_graph.get_oogleg_properties()
             extra_context['subject_predicates'] = my_graph.subject_predicates(object=URIRef(url))
             extra_context['predicate_objects'] = my_graph.predicate_objects(subject=URIRef(url))
 

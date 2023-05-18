@@ -1,4 +1,5 @@
 {% extends 'admin/change_form.html' %}
+{% load custom_tags %}
 
 {% block field_sets %}
     {{ block.super }}
@@ -17,41 +18,98 @@
                     <tbody>
                     {% for po in predicate_objects %}
                         <tr data-rowId="{{ forloop.counter }}" class="form-row has_original dynamic-cells po-cells">
-                            <input type="hidden" name="predicate_objects_predicate_original_value-{{ forloop.counter }}"
-                                   value="{{ po.0 }}">
-                            <input type="hidden" name="predicate_objects_object_original_value-{{ forloop.counter }}"
-                                   value="{{ po.1 }}">
+                            {#                            <input type="hidden" name="predicate_objects_predicate_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.0 }}">#}
+                            {#                            <input type="hidden" name="predicate_objects_object_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.1 }}">#}
                             <td>{{ adminform.form.instance.url|slice:50 }}
                                 {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
-                            <td style="min-width: 200px;"><input
-                                    name="predicate_objects_predicate_value-{{ forloop.counter }}"
-                                    style="min-width: 315px;" type="text"
-                                    value="{{ po.0 }}"></td>
+                            <td><select name="predicate_objects_predicate_value-{{ forloop.counter }}">
+                                <option value="" disabled>Виберіть предикат</option>
+                                {% for pred in all_predicates %}
+                                    <option value="{{ pred }}"
+                                            {% if po.0|stringify == pred %}
+                                            selected
+                                            {% endif %}>{{ pred }}</option>
+                                {% endfor %}
+                            </select></td>
                             <td><input name="predicate_objects_object_value-{{ forloop.counter }}" type="text"
                                        value="{{ po.1 }}"></td>
                         </tr>
                     {% endfor %}
                     {% for sp in subject_predicates %}
                         <tr data-rowId="{{ forloop.counter }}" class="form-row has_original dynamic-cells sp-cells">
-                            <input type="hidden" name="subject_predicates_subject_original_value-{{ forloop.counter }}"
-                                   value="{{ po.0 }}">
-                            <input type="hidden"
-                                   name="subject_predicates_predicate_original_value-{{ forloop.counter }}"
-                                   value="{{ po.1 }}">
-                            <td><input name="subject_predicates_subject_value-{{ forloop.counter }}" type="text"
-                                       value="{{ sp.0 }}"></td>
+                            {#                            <input type="hidden" name="subject_predicates_subject_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.0 }}">#}
+                            {#                            <input type="hidden"#}
+                            {#                                   name="subject_predicates_predicate_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.1 }}">#}
                             <td style="min-width: 200px;"><input
-                                    name="subject_predicates_predicate_value-{{ forloop.counter }}"
+                                    name="subject_predicates_subject_value-{{ forloop.counter }}"
                                     style="min-width: 315px;" type="text"
-                                    value="{{ sp.1 }}"></td>
+                                    value="{{ sp.0 }}"></td>
+                            <td><select name="subject_predicates_predicate_value-{{ forloop.counter }}">
+                                <option value="" disabled>Виберіть предикат</option>
+                                {% for pred in all_predicates %}
+                                    <option value="{{ pred }}" {% if sp.1|stringify == pred %}
+                                            selected
+                                    {% endif %}>{{ pred }}</option>
+                                {% endfor %}
+                            </select></td>
+
                             <td>{{ adminform.form.instance.url|slice:50 }}
                                 {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
                         </tr>
                     {% endfor %}
+                    {% with predicate_objects|make_list|length|add:1 as po_max_index %}
+                        <tr data-rowId="{{ po_max_index }}"
+                            class="form-row has_original dynamic-cells po-cells">
+                            {#                            <input type="hidden" name="subject_predicates_subject_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.0 }}">#}
+                            {#                            <input type="hidden"#}
+                            {#                                   name="subject_predicates_predicate_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.1 }}">#}
+                            <td>{{ adminform.form.instance.url|slice:50 }}
+                                {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
+                            <td><select name="predicate_objects_predicate_value-{{ po_max_index }}">
+                                <option value="" disabled selected>Виберіть предикат</option>
+                                {% for pred in all_predicates %}
+                                    <option value="{{ pred }}">{{ pred }}</option>
+                                {% endfor %}
+                            </select></td>
+                            <td style="min-width: 200px;"><input
+                                    name="predicate_objects_object_value-{{ po_max_index }}"
+                                    style="min-width: 315px;" type="text"></td>
+                        </tr>
+                    {% endwith %}
+                    {% with subject_predicates|make_list|length|add:1 as sp_max_index %}
+                        <tr data-rowId="{{ sp_max_index }}"
+                            class="form-row has_original dynamic-cells sp-cells">
+                            {#                            <input type="hidden" name="subject_predicates_subject_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.0 }}">#}
+                            {#                            <input type="hidden"#}
+                            {#                                   name="subject_predicates_predicate_original_value-{{ forloop.counter }}"#}
+                            {#                                   value="{{ po.1 }}">#}
+
+                            <td style="min-width: 200px;"><input
+                                    name="subject_predicates_subject_value-{{ sp_max_index }}"
+                                    style="min-width: 315px;" type="text"></td>
+                            <td><select name="subject_predicates_predicate_value-{{ sp_max_index }}">
+                                <option value="" disabled selected>Виберіть предикат</option>
+                                {% for pred in all_predicates %}
+                                    <option value="{{ pred }}">{{ pred }}</option>
+                                {% endfor %}
+                            </select></td>
+                            <td>{{ adminform.form.instance.url|slice:50 }}
+                                {% if adminform.form.instance.url|length > 70 %}...{% endif %}</td>
+                        </tr>
+                    {% endwith %}
                     <tr>
-                        <td colspan="7" style="display: flex; justify-content: space-between"><a class="add-sp"
-                                                                                                 href="#">Додати
-                            суб'єкт/предикат</a></td>
+                        <td colspan="7" style="display: flex; justify-content: space-between">
+                            <a class="add-sp" href="#">
+                                Додати суб'єкт/предикат
+                            </a>
+                        </td>
                         <td></td>
                         <td style="text-align: right;"><a class="add-po" href="#">Додати предикат/об'єкт</a></td>
                     </tr>
@@ -64,7 +122,7 @@
     <script>
         function myCloneNode(lastRow) {
             const newNode = lastRow.cloneNode(true);
-            const inputs = newNode.querySelectorAll('input');
+            const inputs = newNode.querySelectorAll('input, select');
             const rowId = parseInt(lastRow.dataset.rowid) + 1;
             inputs.forEach((input) => {
                 input.value = '';
