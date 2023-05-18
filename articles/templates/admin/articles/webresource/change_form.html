@@ -147,5 +147,53 @@
             lastRow.parentNode.insertBefore(newRow, lastRow.nextSibling);
         })
     </script>
+    <script>
+        const hl = document.querySelector('.historylink');
+        const findRelations = hl.cloneNode(true);
+        findRelations.innerHTML = 'Знайти зв\'язки';
+        findRelations.style.marginRight = '10px';
+        // prepend findRelations to historylink
+        hl.parentNode.insertBefore(findRelations, hl);
+        findRelations.addEventListener('click', (e) => {
+            e.preventDefault();
+            const title = document.querySelector('#id_title');
+            const content = document.querySelector('#id_content');
+            fetch(`/rdf/api/get_predicates/?title=${title.value}&content=${content.value}`)
+                .then((response) => {
+                    return response.json();
+                }).then((data) => {
+                // append data.title next to title node
+                const titleParent = title.parentNode;
+                const titleNext = title.nextSibling;
+                let titlePredicates = document.querySelector('.title_predicates');
+                if (!titlePredicates) {
+                    titlePredicates = document.createElement('div');
+                    titlePredicates.classList.add('title_predicates');
+                    titleParent.insertBefore(titlePredicates, titleNext);
+                    titlePredicates.style.marginLeft = '30px';
+                    titlePredicates.style.marginTop = '30px';
+                    titlePredicates.style.maxWidth = '500px;';
+                    titlePredicates.style.paddingLeft = '300px;';
+                }
+                titlePredicates.innerHTML = data.title;
+
+                // append data.content next to content node
+                const content = document.querySelector('.field-content');
+                const contentParent = content.parentNode;
+                const contentNext = content.nextSibling;
+                let contentPredicates = document.querySelector('.content_predicates');
+                if (!contentPredicates) {
+                    contentPredicates = document.createElement('div')
+                    contentPredicates.classList.add('content_predicates');
+                    contentParent.insertBefore(contentPredicates, contentNext);
+                    contentPredicates.style.marginLeft = '30px';
+                    contentPredicates.style.marginTop = '30px';
+                    contentPredicates.style.maxWidth = '500px;';
+                    contentPredicates.style.paddingLeft = '300px;';
+                }
+                contentPredicates.innerHTML = data.content;
+            });
+        })
+    </script>
 {% endblock %}
 

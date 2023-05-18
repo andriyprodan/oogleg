@@ -11,6 +11,8 @@ from search.semantic_search import search, search_faiss
 class Search(TemplateView):
     template_name = 'search/results_list.html'
 
+    # def perform_spellcheck
+
     def get_context_data(self, **kwargs):
         NIKOMY_NE_KAZHI = 1
         context = super().get_context_data(**kwargs)

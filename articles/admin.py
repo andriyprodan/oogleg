@@ -22,7 +22,9 @@ class WebResourceAdmin(admin.ModelAdmin):
                 if key.startswith('predicate_objects_predicate_value-'):
                     predicate = value
                     number = key.rsplit('-', 1)[1]
-                    object = request.POST[f'predicate_objects_object_value-{number}']
+                    object = request.POST.get(f'predicate_objects_object_value-{number}')
+                    if not object:
+                        continue
                     # if object is not URL
                     if not object.startswith('http'):
                         object = Literal(object)
@@ -33,7 +35,9 @@ class WebResourceAdmin(admin.ModelAdmin):
                 elif key.startswith('subject_predicates_subject_value-'):
                     subject = value
                     number = key.rsplit('-', 1)[1]
-                    predicate = request.POST[f'subject_predicates_predicate_value-{number}']
+                    predicate = request.POST.get(f'subject_predicates_predicate_value-{number}')
+                    if not predicate:
+                        continue
                     if not subject.startswith('http'):
                         subject = Literal(subject)
                     else:

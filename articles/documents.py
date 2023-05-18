@@ -5,7 +5,7 @@ from elasticsearch_dsl import analyzer, token_filter
 from articles.models import WebResource
 
 
-@registry.register_document
+# @registry.register_document
 class WebResourceDocument(Document):
     class Index:
         # Name of the Elasticsearch index
