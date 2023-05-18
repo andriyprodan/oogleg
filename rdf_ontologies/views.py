@@ -20,7 +20,7 @@ class GetConnections(APIView):
         objects = my_graph.triples((URIRef(web_resource.url), None, None))
         subjects_list = []
         for s, p, o in subjects:
-            data = {'subject': {}, 'predicate': str(p).split('https://oogleg.co/vocabulary/')[1]}
+            data = {'subject': {}, 'predicate': str(p).split('https://oogleg.co/vocabulary/')[1].replace('_', ' ')}
             if not isinstance(s, URIRef):
                 data['subject']['title'] = str(s)
             else:
@@ -36,7 +36,7 @@ class GetConnections(APIView):
         objects_list = []
         for s, p, o in objects:
             # if object is not URL
-            data = {'object': {}, 'predicate': str(p).split('https://oogleg.co/vocabulary/')[1]}
+            data = {'object': {}, 'predicate': str(p).split('https://oogleg.co/vocabulary/')[1].replace('_', ' ')}
             if not isinstance(o, URIRef):
                 data['object']['title'] = str(o)
             else:
