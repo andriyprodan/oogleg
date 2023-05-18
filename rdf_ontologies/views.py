@@ -79,13 +79,14 @@ class GetTextWithMatchedPredicates(APIView):
 
         # Add the patterns to the spaCy matcher
         triples = []
-        matches = matcher(doc)
+        matches = reversed(matcher(doc))
         highlighted_text = text
+        changes = []
         for match_id, start, end in matches:
             #             highlight oogleg_predicates in red using html and highlight verbs in <b> using html and modify initial text
-            span_text = doc[start:end].text
-            span_start = doc[start].idx
-            span_end = doc[end - 1].idx + len(doc[end - 1].text)
+            original_text = span_text = doc[start:end].text
+            # span_start = doc[start].idx
+            # span_end = doc[end - 1].idx + len(doc[end - 1].text)
             # Highlight Oogleg predicates in red using <span> with a CSS class
             if span_text in formatted_predicates:
                 span_text = f'<span style="color: red;">{span_text}</span>'
@@ -93,7 +94,14 @@ class GetTextWithMatchedPredicates(APIView):
             if doc[start:end].root.pos_ == "VERB":
                 span_text = f'<b>{span_text}</b>'
             # Replace the original span with the highlighted span in the text
-            highlighted_text = highlighted_text[:span_start] + span_text + highlighted_text[span_end:]
+            changes.append((original_text, span_text))
+
+        changes = list(set(changes))
+        # order changes by <span style="color: red;">
+        changes.sort(key=lambda x: x[0] in formatted_predicates, reverse=True)
+
+        for original_text, span_text in changes:
+            highlighted_text = highlighted_text.replace(original_text, span_text)
 
         return highlighted_text
 
