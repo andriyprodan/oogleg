@@ -30,6 +30,9 @@ class WebResource(models.Model):
         text_string = soup.get_text(separator=' ')
         s = unicodedata.normalize('NFKC', unescape(text_string))
         return re.sub(r'\s+', ' ', s)
+    @property
+    def content_without_html(self):
+        return str(self.remove_html(self.content))
 
     def save(self, *args, **kwargs):
         if not self.abstract:

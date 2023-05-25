@@ -20,6 +20,9 @@ class MyGraph(Graph):
                 properties.append(str(s))
         return properties
 
+    def serialize(self, **kwargs) -> bytes:
+        return super().serialize(destination=str(settings.BASE_DIR / "ontology.ttl"), format="turtle", **kwargs)
+
 
 
 my_graph = MyGraph()

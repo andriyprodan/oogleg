@@ -34,3 +34,17 @@ class Search(TemplateView):
 
 
 # class ImagesSearch(TemplateView):
+class Graph(TemplateView):
+    template_name = 'search/graph.html'
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     query = self.request.GET.get('query')
+    #     context['query'] = query
+    #     if query:
+    #         results = search(query, top_k=15, model=bi_encoder)
+    #     else:
+    #         results = []
+    #
+    #     context['results'] = results
+    #     return context

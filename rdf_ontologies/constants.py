@@ -1,0 +1,1 @@
+oogleg_voc = "https://oogleg.co/vocabulary/"
