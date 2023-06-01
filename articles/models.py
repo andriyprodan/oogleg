@@ -5,11 +5,6 @@ import unicodedata
 from bs4 import BeautifulSoup
 from django.db import models
 
-from neo4j_admin.driver import driver
-from search.constants import bi_encoder
-from search.embeddings_storage import write_embeddings
-from search.faiss_index import text_index
-
 
 class WebResource(models.Model):
     url = models.URLField(max_length=2000, unique=True, verbose_name='URL')

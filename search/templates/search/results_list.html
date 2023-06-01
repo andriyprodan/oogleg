@@ -119,6 +119,10 @@
                 top: 5px
             }
         }
+        .corrected_query {
+            margin-bottom: 30px;
+            margin-top: -10px;
+        }
     </style>
 </head>
 <body>
@@ -143,6 +147,9 @@
 </header>
 <main style="margin-top: calc(14px + 88px); padding: 20px 20px 0; width: 1320px; max-width: 90%">
     <div>
+        {% if corrected_query %}
+            <div class="corrected_query">Можливо ви мали на увазі: "<a href="{% url 'search:index' %}?query={{ corrected_query }}">{{ corrected_query }}</a>"</div>
+        {% endif %}
         <ul style="list-style: none;">
             {% for res in results %}
                 <li id="result-{{ res.id }}">

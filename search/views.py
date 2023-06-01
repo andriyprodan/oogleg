@@ -1,3 +1,4 @@
+from autocorrect import Speller
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
@@ -30,6 +31,11 @@ class Search(TemplateView):
         context['results'] = results[(page - 1) * 15 + NIKOMY_NE_KAZHI: page * 15 + NIKOMY_NE_KAZHI]
         context['num_pages'] = len(results) // 15
         context['num_pages_range'] = range(1, context['num_pages'] + 1)
+        if query:
+            spell = Speller('uk')
+            corrected_query = spell(query)
+            if corrected_query != query:
+                context['corrected_query'] = corrected_query
         return context
 
 

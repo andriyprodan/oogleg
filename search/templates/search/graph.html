@@ -8,7 +8,7 @@
     <title>Document</title>
     <style>
         .node {
-            stroke: #fff;
+            {#stroke: #fff;#}
             stroke-width: 1.5px;
         }
 
@@ -16,19 +16,24 @@
             stroke: #999;
             stroke-opacity: .6;
         }
+
+        text.graph_label {
+            fill: navy;
+            stroke-width: 4px;
+        }
     </style>
 </head>
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
 <script>
-    var width = 960,
-        height = 500;
+    var width = 1060,
+        height = 700;
 
     var color = d3.scale.category20();
 
     var force = d3.layout.force()
         .charge(-120)
-        .linkDistance(30)
+        .linkDistance(200)
         .size([width, height]);
 
     var svg = d3.select("body").append("svg")
@@ -53,17 +58,22 @@
 
         var node = svg.selectAll(".node")
             .data(graph.nodes)
-            .enter().append("circle")
+            .enter().append("g")
             .attr("class", "node")
+            .call(force.drag);
+
+        node.append("circle")
             .attr("r", 5)
             .style("fill", function (d) {
                 return color(d.group);
-            })
-            .call(force.drag);
+            });
 
-        node.append("title")
-            .text(function (d) {
-                return d.name;
+        node.append("text")
+            .attr("class", "graph_label")
+            .attr("dx", 12)
+            .attr("dy", ".35em")
+            .html(function (d) { // Use .html() instead of .text()
+                return '<a href="https://example.com">' + d.name + '</a>'; // Replace with your desired link URL
             });
 
         force.on("tick", function () {
@@ -80,14 +90,12 @@
                     return d.target.y;
                 });
 
-            node.attr("cx", function (d) {
-                return d.x;
-            })
-                .attr("cy", function (d) {
-                    return d.y;
-                });
+            node.attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
         });
     });
+
 </script>
 </body>
 </html>

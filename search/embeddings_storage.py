@@ -1,13 +1,9 @@
 import os
 import pickle
 
-import faiss
-import numpy as np
-import pandas as pd
 from django.conf import settings
-from django.db.models import QuerySet
 
-from search.constants import model_name, max_corpus_size, embedding_size, n_clusters, bi_encoder
+from search.constants import model_name, max_corpus_size, bi_encoder
 
 embedding_cache_path = settings.BASE_DIR / 'abstract-embeddings-{}-size-{}.pkl'.format(model_name, max_corpus_size)
 images_embeddings_cache_path = settings.BASE_DIR / 'images-abstract-embeddings-{}-size-{}.pkl'.format(model_name,

@@ -1,10 +1,8 @@
 import faiss
 import numpy as np
-import torch
 
 from search.constants import embedding_size, n_clusters, bi_encoder
-from search.embeddings_storage import get_embeddings, images_embeddings_cache_path, embedding_cache_path
-from search.utils import convert_to_dataframe
+from search.embeddings_storage import get_embeddings, embedding_cache_path
 
 
 # not used

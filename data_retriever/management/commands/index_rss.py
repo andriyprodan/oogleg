@@ -1,9 +1,6 @@
 import feedparser
-import pandas as pd
-from bs4 import BeautifulSoup
 from django.core.management import BaseCommand
 
-from articles.es_documents import ArticleDocument
 from articles.models import WebResource
 from search.embeddings_storage import write_embeddings
 
