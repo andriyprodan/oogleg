@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+{% block content %}
+    <h3>{% translate "Трипли, які буде видалено: " %}</h3>
+    <ul>
+        {% for triple in objects_to_delete %}
+            <li>{{ triple.0 }}, {{ triple.1 }} {{ triple.2 }}</li>
+        {% endfor %}
+    </ul>
+    <form method="post">{% csrf_token %}
+        <div>
+            <input type="submit" class="btn btn-danger" value="{% translate 'Yes, I’m sure' %}">
+            <a href="#" class="button cancel-link">{% translate "No, take me back" %}</a>
+        </div>
+    </form>
+{% endblock %}

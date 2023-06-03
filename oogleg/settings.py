@@ -33,7 +33,9 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'articles',
 
-    'django.contrib.admin',
+    # 'django.contrib.admin',
+    'rdf_ontologies.apps.RdfOntologiesConfig',
+    'rdf_ontologies.apps.CustomAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -45,7 +47,6 @@ INSTALLED_APPS = [
 
     'data_retriever',
     'search',
-    'rdf_ontologies',
 ]
 
 MIDDLEWARE = [

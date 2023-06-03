@@ -147,11 +147,11 @@
 </header>
 <main style="margin-top: calc(14px + 88px); padding: 20px 20px 0; width: 1320px; max-width: 90%">
     <div>
-        {% if query %}
-            <div style="margin-bottom: 20px;">
-                <a href="{% url 'search:graph_search' %}?query={{ query }}">Пошук за тегами</a>
-            </div>
-        {% endif %}
+{#        {% if query %}#}
+{#            <div style="margin-bottom: 20px;">#}
+{#                <a href="{% url 'search:graph_search' %}?query={{ query }}">Пошук за тегами</a>#}
+{#            </div>#}
+{#        {% endif %}#}
         {% if corrected_query %}
             <div class="corrected_query">Можливо ви мали на увазі: "<a href="{% url 'search:index' %}?query={{ corrected_query }}">{{ corrected_query }}</a>"</div>
         {% endif %}
