@@ -1,9 +1,9 @@
 from django.urls import path
 
-from search.views import Search, Graph
+from search.views import Search, SearchBetweenSimilar
 
 app_name = 'search'
 urlpatterns = [
     path('', Search.as_view(), name='index'),
-    path('graph', Graph.as_view(), name='graph'),
+    path('similar_search/', SearchBetweenSimilar.as_view(), name='similar_search'),
 ]

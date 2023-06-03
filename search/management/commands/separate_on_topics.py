@@ -10,12 +10,13 @@ from articles.models import WebResource
 from rdf_ontologies.RDF_graph import my_graph
 from rdf_ontologies.constants import oogleg_voc
 
-nlp = spacy.load("uk_core_news_trf")
 
 
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
+        nlp = spacy.load("uk_core_news_trf")
+
         with open('reduced_topics.txt', 'r', encoding='utf-8') as f:
             reduced_topics = set(f.read().split('\n') )
         documents = []
