@@ -15,9 +15,9 @@ def get_encoder(device):
 
 
 # We use the Bi-Encoder to encode all passages, so that we can use it with semantic search
-# bi_encoder = get_encoder('cuda')
-# bi_encoder.max_seq_length = 256  # Truncate long passages to 256 tokens
-bi_encoder = None
+bi_encoder = get_encoder('cuda')
+bi_encoder.max_seq_length = 256  # Truncate long passages to 256 tokens
+# bi_encoder = None
 
 max_corpus_size = 100000
 
