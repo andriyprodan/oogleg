@@ -1,6 +1,7 @@
 from django.contrib import admin
-from rdflib import URIRef, Literal
+from rdflib import URIRef, Literal, Namespace, RDF
 
+from articles.admin_forms import WebResourceForm
 from articles.models import WebResource
 from oogleg import settings
 from rdf_ontologies.RDF_graph import my_graph
@@ -11,6 +12,17 @@ from rdf_ontologies.RDF_graph import my_graph
 class WebResourceAdmin(admin.ModelAdmin):
     list_display = ('title', 'abstract', 'url')
     search_fields = ('url', 'title', 'abstract')
+
+    def get_form(self, request, obj=None, **kwargs):
+        return WebResourceForm
+
+    def save_model(self, request, obj, form, change):
+        obj.save()
+        owl_class = form.cleaned_data['owl_class']
+        if owl_class:
+            # VOC = Namespace("https://oogleg.co/vocabulary/")
+            my_graph.add((URIRef(obj.url), RDF.type, URIRef(owl_class)))
+            my_graph.serialize()
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
@@ -44,7 +56,7 @@ class WebResourceAdmin(admin.ModelAdmin):
                         subject = URIRef(subject)
                     if subject and predicate:
                         my_graph.add((URIRef(subject), URIRef(predicate), URIRef(url)))
-            my_graph.serialize(destination=str(settings.BASE_DIR / "ontology.ttl"), format="turtle")
+            my_graph.serialize()
 
         if object_id:
             url = WebResource.objects.get(pk=object_id).url

@@ -54,11 +54,11 @@ def get_similar_web_resources(web_resource: WebResource):
         futures.append(future)
 
     # List to store the results
-    results = []
+    # results = []
 
     # Retrieve the results from the futures as they become available
     for future in concurrent.futures.as_completed(futures):
-        result = future.result()
+        future.result()
     #     results.append(result)
 
     return similar_wrs

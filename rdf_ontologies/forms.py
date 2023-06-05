@@ -14,7 +14,7 @@ class OntologyTagsAddForm(forms.Form):
 
 class OntologyClassesAddForm(forms.Form):
     class_name = forms.CharField(label='Назва класу', max_length=100)
-    parent_class = forms.ChoiceField(label='Батьківський клас', choices=())
+    parent_class = forms.ChoiceField(label='Батьківський клас', choices=(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
