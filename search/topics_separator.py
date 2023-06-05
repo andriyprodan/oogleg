@@ -17,6 +17,7 @@ with open('reduced_topics.txt', 'r', encoding='utf-8') as f:
 
 try:
     topics_model = Top2Vec.load("top2vec_model.bin")
+    # topics_model = None
 except:
     documents = []
     document_ids = []

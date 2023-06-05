@@ -2,6 +2,7 @@ from autocorrect import Speller
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from rdflib.plugins.sparql.parser import SelectQuery
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,7 +12,9 @@ from rdf_ontologies.RDF_graph import my_graph
 from search.constants import bi_encoder
 from search.faiss_index import text_index
 from search.semantic_search import search, search_faiss
+from search.serializers import WebResourceSerializer
 from search.topics_separator import get_web_resource_tags
+from search.utils import get_similar_web_resources
 
 
 # Create your views here.
@@ -75,4 +78,12 @@ class FindTags(APIView):
         return Response({'tags': tags})
 
 
+class SimilarWebResources(ListAPIView):
+    serializer_class = WebResourceSerializer
+
+    def get_queryset(self):
+        web_resource_id = self.kwargs['wr_id']
+        wr = WebResource.objects.get(pk=web_resource_id)
+        results = get_similar_web_resources(wr)
+        return results
 

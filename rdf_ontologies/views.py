@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from rdflib import RDF, URIRef
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -63,6 +64,9 @@ class GetConnections(APIView):
 
 
 class GetTextWithMatchedPredicates(APIView):
+    permission_classes = []
+    authentication_classes = [SessionAuthentication]
+
     def get_predicates(self, text):
         doc = nlp(text)
 
@@ -109,13 +113,13 @@ class GetTextWithMatchedPredicates(APIView):
 
         return highlighted_text
 
-    def get(self, request, **kwargs):
+    def post(self, request, **kwargs):
         # Load the spaCy Ukrainian model
 
         # Example texts in Ukrainian
-        title = request.GET.get('title')
+        title = request.data.get('title')
         highlighted_title = self.get_predicates(title)
-        content = request.GET.get('content')
+        content = request.data.get('content')
         highlighted_content = self.get_predicates(content)
 
         return Response({

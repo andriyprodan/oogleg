@@ -153,6 +153,7 @@
         })
     </script>
     <script>
+        const cellsGroup = document.querySelector('#cells-group');
         const hl = document.querySelector('.historylink');
         const findTags = hl.cloneNode(true);
         const findRelations = hl.cloneNode(true);
@@ -169,42 +170,56 @@
             e.preventDefault();
             const title = document.querySelector('#id_title');
             const content = document.querySelector('#id_content');
-            fetch(`/rdf/api/get_predicates/?title=${title.value}&content=${content.value}`)
+            fetch(`/rdf/api/get_predicates/`, {
+                method: 'POST',
+                headers: {
+                  "Content-Type": "application/json",
+                    'X-CSRFToken': '{{ csrf_token }}',
+                  // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: JSON.stringify({
+                    title: title.value,
+                    content: content.value,
+                }),
+            })
                 .then((response) => {
                     return response.json();
                 }).then((data) => {
-                // append data.title next to title node
-                const titleParent = title.parentNode;
-                const titleNext = title.nextSibling;
-                let titlePredicates = document.querySelector('.title_predicates');
-                if (!titlePredicates) {
-                    titlePredicates = document.createElement('div');
-                    titlePredicates.classList.add('title_predicates');
-                    titleParent.insertBefore(titlePredicates, titleNext);
-                    titlePredicates.style.marginLeft = '30px';
-                    titlePredicates.style.marginTop = '30px';
-                    titlePredicates.style.maxWidth = '500px;';
-                    titlePredicates.style.paddingLeft = '300px;';
-                }
-                titlePredicates.innerHTML = data.title;
+                    // append data.title next to title node
+                    const titleParent = title.parentNode;
+                    const titleNext = title.nextSibling;
+                    let titlePredicates = document.querySelector('.title_predicates');
+                    if (!titlePredicates) {
+                        titlePredicates = document.createElement('div');
+                        titlePredicates.classList.add('title_predicates');
+                        titleParent.insertBefore(titlePredicates, titleNext);
+                        titlePredicates.style.marginLeft = '30px';
+                        titlePredicates.style.marginTop = '30px';
+                        titlePredicates.style.maxWidth = '500px;';
+                        titlePredicates.style.paddingLeft = '300px;';
+                    }
+                    titlePredicates.innerHTML = data.title;
 
-                // append data.content next to content node
-                const content = document.querySelector('.field-content');
-                const contentParent = content.parentNode;
-                const contentNext = content.nextSibling;
-                let contentPredicates = document.querySelector('.content_predicates');
-                if (!contentPredicates) {
-                    contentPredicates = document.createElement('div')
-                    contentPredicates.classList.add('content_predicates');
-                    contentParent.insertBefore(contentPredicates, contentNext);
-                    contentPredicates.style.marginLeft = '30px';
-                    contentPredicates.style.marginTop = '30px';
-                    contentPredicates.style.maxWidth = '500px;';
-                    contentPredicates.style.paddingLeft = '300px;';
-                }
-                contentPredicates.innerHTML = data.content;
-            });
-        })
+                    // append data.content next to content node
+                    const content = document.querySelector('.field-content');
+                    const contentParent = content.parentNode;
+                    const contentNext = content.nextSibling;
+                    let contentPredicates = document.querySelector('.content_predicates');
+                    if (!contentPredicates) {
+                        contentPredicates = document.createElement('div')
+                        contentPredicates.classList.add('content_predicates');
+                        contentParent.insertBefore(contentPredicates, contentNext);
+                        contentPredicates.style.marginLeft = '30px';
+                        contentPredicates.style.marginTop = '30px';
+                        contentPredicates.style.maxWidth = '500px;';
+                        contentPredicates.style.paddingLeft = '300px;';
+                    }
+                    contentPredicates.innerHTML = data.content;
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        });
         findTags.addEventListener('click', (e) => {
             e.preventDefault();
             fetch(`/${objectId}/find_wr_tags/`)
@@ -214,7 +229,6 @@
                     if (document.querySelector('.tags-wrapper')) {
                         document.querySelector('.tags-wrapper').remove();
                     }
-                    const cellsGroup = document.querySelector('#cells-group');
                     const title = document.createElement('h2');
                     const tagsWrapper = document.createElement('div');
                     const hrNode = document.createElement('hr');
@@ -229,8 +243,56 @@
                     tagsWrapper.appendChild(hrNode);
             {#        prepend before cellsGroup #}
                     cellsGroup.parentNode.insertBefore(tagsWrapper, cellsGroup);
-            });
+            {#        scroll to cellsGroup#}
+                    cellsGroup.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        });
+        const findSimilarArticles = hl.cloneNode(true);
+        findSimilarArticles.innerHTML = 'Знайти схожі статті';
+        findSimilarArticles.href = '#';
+        findSimilarArticles.style.marginRight = '10px';
+        hl.parentNode.insertBefore(findSimilarArticles, hl);
+
+        findSimilarArticles.addEventListener('click', (e) => {
+            e.preventDefault();
+            fetch(`/${objectId}/similar_web_resources/`)
+                .then((response) => {
+                    return response.json();
+                }).then((data) => {
+                    if (document.querySelector('.similar-articles-wrapper')) {
+                        document.querySelector('.similar-articles-wrapper').remove();
+                    }
+                    const title = document.createElement('h2');
+                    const similarArticlesWrapper = document.createElement('ul');
+                    const hrNode = document.createElement('hr');
+                    similarArticlesWrapper.classList.add('similar-articles-wrapper');
+                    similarArticlesWrapper.appendChild(title);
+
+                    title.innerHTML = 'Cхожі статті';
+                    for (let index in data) {
+                        const liNode = document.createElement('li');
+                        const linkNode = document.createElement('a');
+                        linkNode.href = data[index].url;
+                        linkNode.innerHTML = data[index].title;
+                        liNode.appendChild(linkNode);
+                        similarArticlesWrapper.appendChild(liNode);
+                    }
+                    const similarArticlesNode = document.createElement('p');
+                    similarArticlesWrapper.appendChild(similarArticlesNode);
+                    similarArticlesWrapper.appendChild(hrNode);
+                    {#        prepend before cellsGroup #}
+                    cellsGroup.parentNode.insertBefore(similarArticlesWrapper, cellsGroup);
+                    {#        scroll to cellsGroup#}
+                    cellsGroup.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
         })
+
     </script>
 {% endblock %}
 
