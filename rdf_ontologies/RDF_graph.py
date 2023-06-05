@@ -23,6 +23,11 @@ class MyGraph(Graph):
     def serialize(self, **kwargs) -> bytes:
         return super().serialize(destination=str(settings.BASE_DIR / "ontology.ttl"), format="turtle", **kwargs)
 
+    def remove_comletely(self, resource):
+        self.remove((resource, None, None))
+        self.remove((None, resource, None))
+        self.remove((None, None, resource))
+
 
 
 my_graph = MyGraph()

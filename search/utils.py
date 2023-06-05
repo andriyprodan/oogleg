@@ -14,3 +14,5 @@ def convert_to_dataframe(data):
 
 def encode_string(text):
     return bi_encoder.encode(text, convert_to_tensor=True)
+
+

@@ -1,11 +1,15 @@
-from django.shortcuts import render
-from rdflib import URIRef
+import spacy
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView
+from rdflib import RDF, URIRef
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import spacy
 
 from articles.models import WebResource
 from rdf_ontologies.RDF_graph import my_graph
+from rdf_ontologies.constants import oogleg_voc
+from rdf_ontologies.forms import OntologyPredicatesAddForm
 
 nlp = spacy.load("uk_core_news_trf")
 
@@ -118,3 +122,113 @@ class GetTextWithMatchedPredicates(APIView):
             'title': highlighted_title,
             'content': highlighted_content,
         })
+
+
+class OntologyAdminListView(PermissionRequiredMixin, TemplateView):
+    admin_site = None
+    template_name = 'rdf_ontologies/ontology_list.html'
+    # superuser permissions
+    permission_required = 'auth.is_superuser'
+
+    def get_instances(self):
+        raise NotImplementedError('You must implement get_instances method in your view class.')
+
+    def get_triples_query(self, instances_to_delete):
+        raise NotImplementedError('You must implement get_triples_query method in your view class.')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.admin_site.each_context(self.request))
+        context['instances'] = self.get_instances()
+        return context
+
+    def delete(self, instances_to_delete, *args, **kwargs):
+        for obj in instances_to_delete:
+            my_graph.remove_comletely(resource=URIRef(obj))
+        my_graph.serialize()
+        return self.get(self.request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        instances_to_delete = request.POST.getlist('instances_to_delete')
+        #         check in graph if there is any subjects/predicates/objects to delete
+        if instances_to_delete:
+            sparql_query = self.get_triples_query(instances_to_delete)
+            triples_to_delete = my_graph.query(sparql_query)
+            if triples_to_delete:
+                if 'confirm_delete' in request.POST:
+                    return self.delete(instances_to_delete, *args, **kwargs)
+                else:
+                    return render(request, 'rdf_ontologies/are_you_sure.html', {
+                        'triples_to_delete': triples_to_delete,
+                        'triples_to_delete_count': len(triples_to_delete),
+                        'instances_to_delete': instances_to_delete,
+                        # 'instances_to_delete_type': 'predicate',
+                        # 'instances_to_delete_plural': 'predicates',
+                        **self.admin_site.each_context(self.request)
+                    })
+            return self.delete(instances_to_delete, *args, **kwargs)
+        return self.get(request, *args, **kwargs)
+
+
+class OntologyAdminAddView(PermissionRequiredMixin, TemplateView):
+    admin_site = None
+    template_name = 'rdf_ontologies/ontology_add.html'
+    permission_required = 'auth.is_superuser'
+
+    def create_instance(self, predicate):
+        raise NotImplementedError('You must implement create_instance method in your view class.')
+
+    def get_form_class(self):
+        raise NotImplementedError('You must implement get_form_class method in your view class.')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.admin_site.each_context(self.request))
+        context['form'] = self.get_form_class()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form_class()(request.POST)
+        if form.is_valid():
+            self.create_instance(form)
+            return redirect('admin:ontology_predicates_list')
+        return render(request, self.template_name, {
+            'form': form,
+            **self.admin_site.each_context(self.request)
+        })
+
+
+# Create your views here.
+class OntologyPredicatesList(OntologyAdminListView):
+    def get_instances(self):
+        return my_graph.subjects(RDF.type, RDF.Property)
+
+    def get_triples_query(self, instances):
+        return f"""
+            SELECT ?s ?p ?o
+            WHERE {{
+                ?s ?p ?o .
+                FILTER (?p IN ({', '.join(['<' + s + '>' for s in instances])}))
+                }}"""
+
+
+class OntologyPredicatesAdd(OntologyAdminAddView):
+    def get_form_class(self):
+        return OntologyPredicatesAddForm
+
+    def create_instance(self, form):
+        predicate = form.cleaned_data['predicate_name']
+        # create predicate
+
+        my_graph.add((URIRef(oogleg_voc + predicate), RDF.type, RDF.Property))
+        my_graph.serialize()
+
+
+
+
+
+
+
+
+
+

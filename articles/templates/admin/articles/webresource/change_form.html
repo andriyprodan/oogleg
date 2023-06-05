@@ -120,6 +120,11 @@
     </div>
 
     <script>
+{#    get object id from django#}
+    const objectId = {{ adminform.form.instance.id }};
+    </script>
+
+    <script>
         function myCloneNode(lastRow) {
             const newNode = lastRow.cloneNode(true);
             const inputs = newNode.querySelectorAll('input, select');
@@ -149,10 +154,16 @@
     </script>
     <script>
         const hl = document.querySelector('.historylink');
+        const findTags = hl.cloneNode(true);
         const findRelations = hl.cloneNode(true);
+        findTags.innerHTML = 'Знайти теги';
+        findTags.href = '#';
+        findRelations.href = '#';
+        findTags.style.marginRight = '10px';
         findRelations.innerHTML = 'Знайти зв\'язки';
         findRelations.style.marginRight = '10px';
         // prepend findRelations to historylink
+        hl.parentNode.insertBefore(findTags, hl);
         hl.parentNode.insertBefore(findRelations, hl);
         findRelations.addEventListener('click', (e) => {
             e.preventDefault();
@@ -192,6 +203,32 @@
                     contentPredicates.style.paddingLeft = '300px;';
                 }
                 contentPredicates.innerHTML = data.content;
+            });
+        })
+        findTags.addEventListener('click', (e) => {
+            e.preventDefault();
+            fetch(`/${objectId}/find_wr_tags/`)
+                .then((response) => {
+                    return response.json();
+                }).then((data) => {
+                    if (document.querySelector('.tags-wrapper')) {
+                        document.querySelector('.tags-wrapper').remove();
+                    }
+                    const cellsGroup = document.querySelector('#cells-group');
+                    const title = document.createElement('h2');
+                    const tagsWrapper = document.createElement('div');
+                    const hrNode = document.createElement('hr');
+                    tagsWrapper.classList.add('tags-wrapper');
+                    tagsWrapper.appendChild(title);
+
+                    title.innerHTML = 'Знайдені теги';
+                    const tagsString = data.tags.join(', ');
+                    const tagsNode = document.createElement('p');
+                    tagsNode.innerHTML = tagsString;
+                    tagsWrapper.appendChild(tagsNode);
+                    tagsWrapper.appendChild(hrNode);
+            {#        prepend before cellsGroup #}
+                    cellsGroup.parentNode.insertBefore(tagsWrapper, cellsGroup);
             });
         })
     </script>
