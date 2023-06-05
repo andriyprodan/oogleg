@@ -29,6 +29,7 @@
         <option value="$MODULE_DIR$/search/templates" />
         <option value="$MODULE_DIR$/neo4j_admin/templates" />
         <option value="$MODULE_DIR$/articles/templates" />
+        <option value="$MODULE_DIR$/rdf_ontologies/templates" />
       </list>
     </option>
   </component>

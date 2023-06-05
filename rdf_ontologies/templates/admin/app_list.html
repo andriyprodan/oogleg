@@ -7,7 +7,19 @@
             <tr>
                 <th><a href="{% url 'admin:ontology_predicates_list' %}">Предикати</a></th>
                 <td>
-                    <a href="/admin/" class="addlink">Додати</a>
+                    <a href="{% url 'admin:ontology_predicates_add' %}" class="addlink">Додати</a>
+                </td>
+            </tr>
+            <tr>
+                <th><a href="{% url 'admin:ontology_tags_list' %}">Теги</a></th>
+                <td>
+                    <a href="{% url 'admin:ontology_tags_add' %}" class="addlink">Додати</a>
+                </td>
+            </tr>
+            <tr>
+                <th><a href="{% url 'admin:ontology_classes_list' %}">Класи</a></th>
+                <td>
+                    <a href="{% url 'admin:ontology_classes_add' %}" class="addlink">Додати</a>
                 </td>
             </tr>
         </table>

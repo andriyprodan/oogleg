@@ -1,0 +1,20 @@
+{% extends 'rdf_ontologies/ontology_list.html' %}
+
+{% block results %}
+    <table>
+        <thead>
+            <tr>
+                <th>Видалити</th>
+                <th>Ідентифікатор</th>
+                <th>Батьківський клас</th>
+            </tr>
+        </thead>
+        {% for instance in instances %}
+            <tr>
+                <td><input type="checkbox" value="{{ instance.id }}" name="instances_to_delete"></td>
+                <td>{{ instance.id }}</td>
+                <td>{% if instance.parent_id %}{{ instance.parent_id }}{% endif %}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

@@ -10,14 +10,15 @@ from articles.models import WebResource
 from rdf_ontologies.RDF_graph import my_graph
 from rdf_ontologies.constants import oogleg_voc
 
-nlp = spacy.load("uk_core_news_trf")
+# nlp = spacy.load("uk_core_news_trf")
+nlp = None
 
 with open('reduced_topics.txt', 'r', encoding='utf-8') as f:
     reduced_topics = set(f.read().split('\n'))
 
 try:
-    topics_model = Top2Vec.load("top2vec_model.bin")
-    # topics_model = None
+    # topics_model = Top2Vec.load("top2vec_model.bin")
+    topics_model = None
 except:
     documents = []
     document_ids = []

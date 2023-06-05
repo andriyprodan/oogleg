@@ -1,8 +1,10 @@
 import spacy
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views.generic import TemplateView
-from rdflib import RDF, URIRef
+from rdflib import RDF, URIRef, Namespace, OWL, RDFS
+from rdflib.plugins.sparql import prepareQuery
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,7 +12,7 @@ from rest_framework.views import APIView
 from articles.models import WebResource
 from rdf_ontologies.RDF_graph import my_graph
 from rdf_ontologies.constants import oogleg_voc
-from rdf_ontologies.forms import OntologyPredicatesAddForm
+from rdf_ontologies.forms import OntologyPredicatesAddForm, OntologyTagsAddForm, OntologyClassesAddForm
 
 nlp = spacy.load("uk_core_news_trf")
 
@@ -179,6 +181,8 @@ class OntologyAdminAddView(PermissionRequiredMixin, TemplateView):
     template_name = 'rdf_ontologies/ontology_add.html'
     permission_required = 'auth.is_superuser'
 
+    redirect_to = None
+
     def create_instance(self, predicate):
         raise NotImplementedError('You must implement create_instance method in your view class.')
 
@@ -195,7 +199,7 @@ class OntologyAdminAddView(PermissionRequiredMixin, TemplateView):
         form = self.get_form_class()(request.POST)
         if form.is_valid():
             self.create_instance(form)
-            return redirect('admin:ontology_predicates_list')
+            return redirect(self.redirect_to)
         return render(request, self.template_name, {
             'form': form,
             **self.admin_site.each_context(self.request)
@@ -204,6 +208,11 @@ class OntologyAdminAddView(PermissionRequiredMixin, TemplateView):
 
 # Create your views here.
 class OntologyPredicatesList(OntologyAdminListView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['add_link'] = reverse('admin:ontology_predicates_add')
+        return context
+
     def get_instances(self):
         return my_graph.subjects(RDF.type, RDF.Property)
 
@@ -217,6 +226,8 @@ class OntologyPredicatesList(OntologyAdminListView):
 
 
 class OntologyPredicatesAdd(OntologyAdminAddView):
+    redirect_to = 'admin:ontology_predicates_list'
+
     def get_form_class(self):
         return OntologyPredicatesAddForm
 
@@ -228,10 +239,94 @@ class OntologyPredicatesAdd(OntologyAdminAddView):
         my_graph.serialize()
 
 
+class OntologyTagsList(OntologyAdminListView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['add_link'] = reverse('admin:ontology_tags_add')
+        return context
+
+    def get_instances(self):
+        # get subjects for predicate: RDF.type, object: voc:Тег
+        # example <https://oogleg.co/vocabulary/tag/міфологія> a voc:Тег .
+        return my_graph.subjects(RDF.type, URIRef(oogleg_voc + 'Тег'))
+
+    def get_triples_query(self, instances):
+        #         FILTER for every subjects and objects
+        return f"""
+            SELECT ?s ?p ?o
+            WHERE {{
+                ?s ?p ?o .
+                FILTER (?s IN ({', '.join(['<' + s + '>' for s in instances])}) || ?o IN ({', '.join(['<' + s + '>' for s in instances])}))
+                }}"""
 
 
+class OntologyTagsAdd(OntologyAdminAddView):
+    redirect_to = 'admin:ontology_tags_list'
+
+    def get_form_class(self):
+        return OntologyTagsAddForm
+
+    def create_instance(self, form):
+        tag_name = form.cleaned_data['tag_name']
+        # create predicate
+
+        my_graph.add((URIRef(oogleg_voc + 'tag/' + tag_name), RDF.type, URIRef(oogleg_voc + 'Тег')))
+        my_graph.serialize()
 
 
+class OntologyClassesList(OntologyAdminListView):
+    template_name = 'rdf_ontologies/ontology_classes_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['add_link'] = reverse('admin:ontology_classes_add')
+        return context
+
+    def get_instances(self):
+        # get OWL classes with rdfs:subClassOf
+        # example <https://oogleg.co/vocabulary/клас/міфологія> rdfs:subClassOf <https://oogleg.co/vocabulary/клас/предмет> .
+        query = """
+            SELECT ?id ?parent_id
+            WHERE {
+              ?id rdf:type owl:Class .
+              OPTIONAL { ?id rdfs:subClassOf ?parent_id . }
+            }
+            """
+
+        return my_graph.query(query)
+
+    def get_triples_query(self, instances):
+        #         FILTER for every subjects and objects
+        return f"""
+            SELECT ?s ?p ?o
+            WHERE {{
+                ?s ?p ?o .
+                FILTER (?s IN ({', '.join(['<' + s + '>' for s in instances])}) || ?o IN ({', '.join(['<' + s + '>' for s in instances])}))
+                }}"""
+
+
+class OntologyClassesAdd(OntologyAdminAddView):
+    redirect_to = 'admin:ontology_classes_list'
+
+    def get_form_class(self):
+        return OntologyClassesAddForm
+
+    # set choices for parent_class dynamically
+
+    def create_instance(self, form):
+        class_name = form.cleaned_data['class_name']
+        parent_class = form.cleaned_data.get('parent_class')
+        VOC = Namespace(oogleg_voc)
+
+        my_graph.bind('voc', VOC)
+
+        # create class
+        # add using VOC
+        my_graph.add((URIRef(VOC[class_name]), RDF.type, OWL.Class))
+        if parent_class:
+            my_graph.add((URIRef(VOC[class_name]), RDFS.subClassOf, URIRef(parent_class)))
+
+        my_graph.serialize()
 
 
 
