@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'articles',
 
     # 'django.contrib.admin',
+    'rest_framework',
     'rdf_ontologies.apps.RdfOntologiesConfig',
     'rdf_ontologies.apps.CustomAdminConfig',
     'django.contrib.auth',

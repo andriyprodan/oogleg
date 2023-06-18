@@ -48,7 +48,7 @@ def get_faiss_index(index_name, embeddings_cache_path):
 
 
 # todo update faiss index every hour, use Celery cron job
-text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
-# text_index, ids_data = None, None
+# text_index, ids_data = get_faiss_index('text_index', embedding_cache_path)
+text_index, ids_data = None, None
 
 # images_index, images_data = get_faiss_index('images_index', images_embeddings_cache_path)

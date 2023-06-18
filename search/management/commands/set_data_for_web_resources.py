@@ -14,7 +14,7 @@ class Command(BaseCommand):
         for wr in WebResource.objects.all():
             my_graph.add((URIRef(wr.url), RDF.type, URIRef(oogleg_voc + 'Веб_Ресурс')))
             my_graph.add((URIRef(wr.url), URIRef(oogleg_voc + 'має_заголовок'), Literal(wr.title)))
-            my_graph.add((URIRef(wr.url), URIRef(oogleg_voc + 'має_анотацію'), Literal(wr.abstract)))
+            # my_graph.add((URIRef(wr.url), URIRef(oogleg_voc + 'має_анотацію'), Literal(wr.abstract)))
 
             i += 1
             if i % 500 == 0:

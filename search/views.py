@@ -87,3 +87,49 @@ class SimilarWebResources(ListAPIView):
         results = get_similar_web_resources(wr)
         return results
 
+
+class GraphSearch(TemplateView):
+    template_name = 'search/graph.html'
+
+
+def get_connected_objects(graph, subject):
+    objects = graph.predicate_objects(subject)
+    return objects
+
+
+class GraphSearchAPI(APIView):
+    def get(self, *args, **kwargs):
+        query = self.request.GET.get('query')
+        # get all subjects/predicates/objects that contain query and all connected nodes for this nodes
+        sparql_query = f"""
+            PREFIX voc: <https://oogleg.co/vocabulary/>
+            SELECT ?subject ?predicate ?object
+            WHERE {{
+                ?subject ?predicate ?object .
+                FILTER (regex(?subject, "{query}", "i") || regex(?predicate, "{query}", "i") || regex(?object, "{query}", "i"))
+                }}
+            """
+        results = my_graph.query(sparql_query)
+
+        nodes = list()
+        connections = list()
+        for result in results:
+            current_subject = result[0]
+            d3_node = {'id': current_subject, 'group': current_subject, 'value': 2}
+            if not d3_node in nodes:
+                nodes.append(d3_node)
+                d3_node_index = nodes.index(d3_node)
+                # d3_connection = {'source': result[0], 'target': result[2], 'value': result[1]}
+                # if not d3_connection in connections:
+                #     connections.add(d3_connection)
+                connected_objects = get_connected_objects(my_graph, current_subject)
+                for pred, obj in connected_objects:
+                    object_node = {'id': obj, 'group': obj, 'value': 2}
+                    if not object_node in nodes:
+                        nodes.append(object_node)
+                    object_node_index = nodes.index(object_node)
+                    d3_connection = {'source': d3_node_index, 'target': object_node_index, 'value': 2, 'predicate': pred}
+                    if not d3_connection in connections:
+                        connections.append(d3_connection)
+
+        return Response({'nodes': list(nodes), 'links': list(connections)})
